@@ -48,26 +48,76 @@ from __future__ import print_function
 # ===========================================================================
 # SECTION A - IMPORTS & WORD CONSTANTS
 # ===========================================================================
-import clr
 import os
-import re
-import json
-import shutil
+import sys
+import traceback
 
-clr.AddReference("System.Windows.Forms")
-clr.AddReference("System.Drawing")
-from System.Windows.Forms import (
-    Application, Form, Label, Button, TextBox, CheckBox, ComboBox,
-    CheckedListBox, ListBox, TabControl, TabPage, Panel, ToolTip,
-    DataGridView, DataGridViewAutoSizeColumnsMode,
-    OpenFileDialog, MessageBox, MessageBoxButtons, MessageBoxIcon,
-    DialogResult, FormBorderStyle, FormStartPosition, SelectionMode,
-    ComboBoxStyle, AnchorStyles, ScrollBars, BorderStyle, DockStyle
-)
-from System.Drawing import Size, Point, Font, FontStyle, Color
+# --- Crash reporting -------------------------------------------------------
+# If anything goes wrong (even during imports) we want the error to be
+# READABLE rather than flashing past as the console window closes. These two
+# helpers hold the window open, write an error_log.txt next to the script, and
+# (when possible) show a blocking dialog with the full traceback.
 
-clr.AddReference("Microsoft.Office.Interop.Word")
-import Microsoft.Office.Interop.Word as Word
+def _hold_console():
+    try:
+        raw_input("\nPress Enter to close this window...")
+    except Exception:
+        try:
+            input("\nPress Enter to close this window...")  # py3 fallback
+        except Exception:
+            pass
+
+
+def _report_fatal(context):
+    tb = traceback.format_exc()
+    print("\n" + "=" * 70)
+    print("FATAL ERROR during: %s" % context)
+    print("=" * 70)
+    print(tb)
+    try:
+        log_dir = os.path.dirname(os.path.abspath(__file__))
+    except Exception:
+        log_dir = os.getcwd()
+    try:
+        with open(os.path.join(log_dir, "error_log.txt"), "w") as f:
+            f.write("FATAL ERROR during: %s\n\n%s" % (context, tb))
+        print("(A copy was written to error_log.txt)")
+    except Exception:
+        pass
+    # A blocking dialog survives the console closing - try it if WinForms loaded
+    try:
+        from System.Windows.Forms import (
+            MessageBox, MessageBoxButtons, MessageBoxIcon)
+        MessageBox.Show(tb, "Universal Word Tool - Fatal Error (%s)" % context,
+                        MessageBoxButtons.OK, MessageBoxIcon.Error)
+    except Exception:
+        pass
+    _hold_console()
+
+
+try:
+    import clr
+    import re
+    import json
+    import shutil
+
+    clr.AddReference("System.Windows.Forms")
+    clr.AddReference("System.Drawing")
+    from System.Windows.Forms import (
+        Application, Form, Label, Button, TextBox, CheckBox, ComboBox,
+        CheckedListBox, ListBox, TabControl, TabPage, Panel, ToolTip,
+        DataGridView, DataGridViewAutoSizeColumnsMode,
+        OpenFileDialog, MessageBox, MessageBoxButtons, MessageBoxIcon,
+        DialogResult, FormBorderStyle, FormStartPosition, SelectionMode,
+        ComboBoxStyle, AnchorStyles, ScrollBars, BorderStyle, DockStyle
+    )
+    from System.Drawing import Size, Point, Font, FontStyle, Color
+
+    clr.AddReference("Microsoft.Office.Interop.Word")
+    import Microsoft.Office.Interop.Word as Word
+except Exception:
+    _report_fatal("startup imports (IronPython / Word interop not available?)")
+    raise SystemExit(1)
 
 # Word row-height rule constants
 WD_ROW_HEIGHT_AT_LEAST = 1
@@ -1306,15 +1356,16 @@ def run_tools(ordered_ids, config):
     print("Output: %s" % output_doc)
     print("Pagination (page-range filtering): %s" % ("ON" if page_filter else "OFF"))
 
-    # Work on a copy so the original is untouched
-    shutil.copy2(input_doc, output_doc)
-
-    word_app = Word.ApplicationClass()
-    word_app.Visible = False
+    word_app = None
     doc = None
     results = []
 
     try:
+        # Work on a copy so the original is untouched
+        shutil.copy2(input_doc, output_doc)
+
+        word_app = Word.ApplicationClass()
+        word_app.Visible = False
         doc = word_app.Documents.Open(output_doc, ReadOnly=False)
 
         word_app.ScreenUpdating = False
@@ -1354,23 +1405,31 @@ def run_tools(ordered_ids, config):
             "\n\nSaved to:\n" + output_doc,
             "Done", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
-    except Exception as ex:
-        import traceback
+    except Exception:
+        tb = traceback.format_exc()
         traceback.print_exc()
+        try:
+            log_dir = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(log_dir, "error_log.txt"), "w") as f:
+                f.write(tb)
+        except Exception:
+            pass
         if doc is not None:
             try:
                 doc.Close(False)
             except Exception:
                 pass
-        MessageBox.Show("Fatal error: %s" % str(ex), "Error",
+        MessageBox.Show("Error while processing the document:\n\n" + tb,
+                        "Universal Word Tool - Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error)
     finally:
-        try:
-            word_app.Options.Pagination = True
-            word_app.ScreenUpdating = True
-            word_app.Quit()
-        except Exception:
-            pass
+        if word_app is not None:
+            try:
+                word_app.Options.Pagination = True
+                word_app.ScreenUpdating = True
+                word_app.Quit()
+            except Exception:
+                pass
 
 
 # ===========================================================================
@@ -1400,4 +1459,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        _report_fatal("run")
