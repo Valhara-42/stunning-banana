@@ -1,0 +1,76 @@
+{
+  "selected": [],
+  "run_order": [],
+  "global": {
+    "start_page": null,
+    "finish_page": null,
+    "start_row": null,
+    "end_row": null,
+    "start_col": null,
+    "end_col": null
+  },
+  "tools": {
+    "delete_rows": {
+      "trigger_text": "delete line",
+      "case_insensitive": true
+    },
+    "delete_empty_rows": {
+      "check_text": true,
+      "check_inline_shapes": true,
+      "check_floating_shapes": true
+    },
+    "highlight_cells": {
+      "case_insensitive": true,
+      "color_map": [
+        ["p5", "63BE7B"],
+        ["p4", "B1D47F"],
+        ["p3", "FFEB84"],
+        ["p2", "FCAA78"],
+        ["p1", "F8696B"],
+        ["p5 (5-10y)", "63BE7B"],
+        ["p4 (2-5y)", "B1D47F"],
+        ["p3 (12-24m)", "FFEB84"],
+        ["p2 (0-12m)", "FCAA78"],
+        ["p1 (immediate)", "F8696B"],
+        ["no", "FF9B9B"],
+        ["yes", "A8D08D"],
+        ["c1 - excellent", "63BE7B"],
+        ["c2 - good", "B1D47F"],
+        ["c3 - average", "FFEB84"],
+        ["c4 - poor", "FCAA78"],
+        ["c5 - end of life", "F8696B"],
+        ["c5 - very poor", "F8696B"]
+      ]
+    },
+    "remove_text": {
+      "target_column": 3,
+      "text_to_remove": "Note: Replacement of the switchboard will remediate all risk items and the associated cost in the risk register relating to the switchboard."
+    },
+    "format_currency": {
+      "mode": "after_marker",
+      "marker_text": "Cost Estimate",
+      "start_row": 10,
+      "skip_last_rows": 2,
+      "target_column": 4
+    },
+    "bold_underline": {
+      "tag": "(bold)",
+      "apply": "both",
+      "target_column": 4,
+      "case_insensitive": true
+    },
+    "delete_numbered_lines": {
+      "require_text": "Note: ",
+      "pattern": "[\\r\\n]+\\d+\\.[^\\r\\n]*",
+      "target_column": 2
+    },
+    "row_height": {
+      "height_cm": 0.5
+    },
+    "insert_images": {
+      "match_patterns": ["\\LCE", "\\\\"],
+      "path_prefix": "",
+      "path_suffix": ""
+    }
+  }
+}
