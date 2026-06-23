@@ -943,8 +943,6 @@ def _add_label(panel, text, y):
     lbl.Text = text
     lbl.Location = Point(LABEL_X, y + 3)
     lbl.Size = Size(INPUT_X - LABEL_X - 8, 40)
-    lbl.AutoSize = False
-    lbl.TextAlign = 4  # ContentAlignment.MiddleLeft
     panel.Controls.Add(lbl)
 
 
