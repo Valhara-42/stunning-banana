@@ -1385,7 +1385,6 @@ def run_tools(ordered_ids, config):
                 print("   %s" % summary)
                 results.append("OK   " + summary)
             except Exception as ex:
-                import traceback
                 traceback.print_exc()
                 results.append("ERR  %s -- %s" % (tool["label"], str(ex)))
 
