@@ -933,8 +933,8 @@ def save_config(cfg):
 # ===========================================================================
 
 LABEL_X = 12
-INPUT_X = 240
-INPUT_W = 380
+INPUT_X = 280      # moved right to give labels more width (220 -> 256 px)
+INPUT_W = 400      # increased to keep inputs from feeling cramped
 ROW_H = 30
 
 
@@ -943,6 +943,8 @@ def _add_label(panel, text, y):
     lbl.Text = text
     lbl.Location = Point(LABEL_X, y + 3)
     lbl.Size = Size(INPUT_X - LABEL_X - 8, 40)
+    lbl.AutoSize = False
+    lbl.TextAlign = 4  # ContentAlignment.MiddleLeft
     panel.Controls.Add(lbl)
 
 
